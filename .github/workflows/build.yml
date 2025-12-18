@@ -1,0 +1,34 @@
+name: Build HexRaysCodeXplorer
+on: [push]
+
+jobs:
+  Build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+        with:
+          path: HexRaysCodeXplorer
+
+      - name: Check out HexRays SDK
+        uses: actions/checkout@v6
+        with:
+          repository: HexRaysSA/ida-sdk
+          ref: "v9.2"
+          path: ida-sdk
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Compile the plugin
+        run: msbuild HexRaysCodeXplorer\src\HexRaysCodeXplorer.sln /m /p:Configuration="Release x64" /p:Platform=x64 /p:IDADIR="$env:GITHUB_WORKSPACE" /p:IDASDK="$env:GITHUB_WORKSPACE/ida-sdk/src"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HexRaysCodeXplorer
+          path: plugins/
+          if-no-files-found: error
